@@ -1,11 +1,9 @@
-import { supabase } from './lib/supabaseClient'
+
+import Login from './pages/Login'
 
 function App() {
-  console.log(supabase)
-
-  return (
-    <h1>CampusPulse Connected</h1>
-  )
+ 
+  return <Login />
 }
 
 export default App
