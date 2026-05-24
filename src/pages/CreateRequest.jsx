@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 
-function CreateRequest() {
+function CreateRequest({ onRequestCreated }) {
   const { user } = useAuth()
 
   const [title, setTitle] = useState('')
@@ -30,7 +30,7 @@ function CreateRequest() {
       return
     }
 
-    alert('Request submitted!')
+    onRequestCreated()
 
     setTitle('')
     setDescription('')
@@ -40,37 +40,78 @@ function CreateRequest() {
 
   return (
     <div>
-      <h2>Create Request</h2>
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+        Create Request
+      </h2>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+      >
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Title
+          </label>
 
-        <textarea
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
+          <input
+            type="text"
+            placeholder="Broken chair in Room 203"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-        <input
-          type="text"
-          placeholder="Category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
 
-        <input
-          type="text"
-          placeholder="Location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
+          <textarea
+            placeholder="Describe the issue..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows="4"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-        <button type="submit">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Category
+          </label>
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select category</option>
+            <option value="Facilities">Facilities</option>
+            <option value="Academic">Academic</option>
+            <option value="Services">Services</option>
+            <option value="Emergency">Emergency</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Location
+          </label>
+
+          <input
+            type="text"
+            placeholder="Room 203"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition"
+        >
           Submit Request
         </button>
       </form>

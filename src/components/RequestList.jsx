@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
-function RequestList() {
+function RequestList({ refreshKey }) {
   const [requests, setRequests] = useState([])
 
   useEffect(() => {
-    fetchRequests()
-  }, [])
+  fetchRequests()
+  }, [refreshKey])
 
   async function fetchRequests() {
     const { data, error } = await supabase
