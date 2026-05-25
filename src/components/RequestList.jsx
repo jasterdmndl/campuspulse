@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { useAuth } from '../context/AuthContext'
 
 function RequestList({ refreshKey }) {
   const [requests, setRequests] = useState([])
+  const { profile } = useAuth()
 
   useEffect(() => {
     fetchRequests()
@@ -97,7 +99,7 @@ function RequestList({ refreshKey }) {
                   {request.category}
                 </span>
               </div>
-
+              {profile?.role === 'admin' && (
               <select
                 value={request.status}
                 onChange={(e) =>
@@ -117,6 +119,7 @@ function RequestList({ refreshKey }) {
                   Resolved
                 </option>
               </select>
+              )}
             </div>
           </div>
         ))}
