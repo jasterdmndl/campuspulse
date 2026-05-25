@@ -5,10 +5,32 @@ import { useAuth } from '../context/AuthContext'
 function RequestList({ refreshKey }) {
   const [requests, setRequests] = useState([])
   const { profile } = useAuth()
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('all')
+  const [selectedImage, setSelectedImage] = useState(null)
 
   useEffect(() => {
-    fetchRequests()
-  }, [refreshKey])
+  fetchRequests()
+
+  const channel = supabase
+    .channel('requests-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'requests',
+      },
+      () => {
+        fetchRequests()
+      }
+    )
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}, [])
 
   async function fetchRequests() {
     const { data, error } = await supabase
@@ -50,21 +72,63 @@ function RequestList({ refreshKey }) {
         return 'bg-gray-100 text-gray-700'
     }
   }
+  const filteredRequests = requests.filter((request) => {
+  const matchesSearch =
+      request.title
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      request.location
+        .toLowerCase()
+        .includes(search.toLowerCase())
+
+  const matchesFilter =
+      filter === 'all' ||
+      request.status === filter
+
+    return matchesSearch && matchesFilter
+  })
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Campus Requests
-        </h2>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Campus Requests
+          </h2>
 
-        <p className="text-sm text-gray-500">
-          {requests.length} requests
-        </p>
+          <p className="text-sm text-gray-500">
+            {filteredRequests.length} requests
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+
+          <input
+            type="text"
+            placeholder="Search requests..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">
+              In Progress
+            </option>
+            <option value="resolved">Resolved</option>
+          </select>
+
+        </div>
       </div>
 
       <div className="space-y-4">
-        {requests.map((request) => (
+        {filteredRequests.map((request) => (
           <div
             key={request.id}
             className="border border-gray-200 rounded-2xl p-5 hover:shadow-md transition bg-white"
@@ -90,6 +154,16 @@ function RequestList({ refreshKey }) {
 
             <p className="text-gray-600 mb-4">
               {request.description}
+              {request.image_url && (
+                <img
+                  src={request.image_url}
+                  alt="Request"
+                  onClick={() =>
+                    setSelectedImage(request.image_url)
+                  }
+                  className="w-full h-64 object-cover rounded-xl mb-4 cursor-pointer hover:opacity-90 transition"
+                />
+              )}
             </p>
 
             <div className="flex items-center justify-between">
@@ -124,6 +198,18 @@ function RequestList({ refreshKey }) {
           </div>
         ))}
       </div>
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <img
+            src={selectedImage}
+            alt="Preview"
+            className="max-w-full max-h-full rounded-2xl shadow-2xl"
+          />
+        </div>
+      )}
     </div>
   )
 }

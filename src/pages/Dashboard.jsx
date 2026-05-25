@@ -3,11 +3,10 @@ import { useAuth } from '../context/AuthContext'
 import CreateRequest from './CreateRequest'
 import RequestList from '../components/RequestList'
 import { useState } from 'react'
-
+import StatsCards from '../components/StatsCards'
 
 function Dashboard() {
   const { user } = useAuth()
-  const [refreshKey, setRefreshKey] = useState(0)
   async function handleLogout() {
     await supabase.auth.signOut()
   }
@@ -45,26 +44,23 @@ function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-6 grid md:grid-cols-3 gap-6">
-
+      <main className="max-w-6xl mx-auto p-6">
+        <StatsCards />
+        <div className="grid md:grid-cols-3 gap-6">
         {/* Request Form */}
         <div className="md:col-span-1">
           <div className="bg-white rounded-2xl shadow-sm p-6">
-            <CreateRequest
-                onRequestCreated={() =>
-                    setRefreshKey(prev => prev + 1)
-                }
-                />
+            <CreateRequest />
           </div>
         </div>
 
         {/* Request Feed */}
         <div className="md:col-span-2">
           <div className="bg-white rounded-2xl shadow-sm p-6">
-            <RequestList refreshKey={refreshKey} />
+            <RequestList />
           </div>
         </div>
-
+      </div>
       </main>
     </div>
   )
