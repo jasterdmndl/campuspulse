@@ -20,11 +20,11 @@ function Dashboard() {
           
           <div>
             <h1 className="text-2xl font-bold text-blue-600">
-              CampusPulse
+              CICS Hub
             </h1>
 
             <p className="text-sm text-gray-500">
-              Campus Operations System
+              Campus request system
             </p>
           </div>
 
