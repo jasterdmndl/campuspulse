@@ -57,9 +57,23 @@ function RequestList({ refreshKey }) {
       return
     }
 
-    fetchRequests()
-  }
+    // Insert activity log
+    const { error: logError } = await supabase
+      .from('request_logs')
+      .insert([
+        {
+          request_id: id,
+          user_id: profile.id,
+          action: `changed status to ${newStatus}`,
+        },
+      ])
 
+    if (logError) {
+      console.log(logError)
+    }
+
+    fetchRequests()
+}
   function getStatusColor(status) {
     switch (status) {
       case 'resolved':
@@ -101,7 +115,7 @@ function RequestList({ refreshKey }) {
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
 
           <input
             type="text"
@@ -133,7 +147,7 @@ function RequestList({ refreshKey }) {
             key={request.id}
             className="border border-gray-200 rounded-2xl p-5 hover:shadow-md transition bg-white"
           >
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
               
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">
@@ -161,12 +175,12 @@ function RequestList({ refreshKey }) {
                   onClick={() =>
                     setSelectedImage(request.image_url)
                   }
-                  className="w-full h-64 object-cover rounded-xl mb-4 cursor-pointer hover:opacity-90 transition"
+                  className="w-full h-48 sm:h-64 object-cover rounded-xl mb-4 cursor-pointer hover:opacity-90 transition"
                 />
               )}
             </p>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               
               <div className="flex gap-2">
                 <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">

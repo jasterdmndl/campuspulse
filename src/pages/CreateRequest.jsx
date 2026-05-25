@@ -51,11 +51,21 @@ function CreateRequest() {
           image_url: imageUrl,
         },
       ])
-
+  .select()
+  .single()
     if (error) {
       toast.error(error.message)
       return
     }
+    await supabase
+    .from('request_logs')
+    .insert([
+      {
+        request_id: data.id,
+        user_id: user.id,
+        action: 'created request',
+      },
+    ])
 
     setTitle('')
     setDescription('')
