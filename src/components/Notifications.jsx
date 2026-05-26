@@ -1,52 +1,69 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { useAuth } from '../context/AuthContext'
 
 function Notifications() {
+  const { profile } = useAuth()
   const [notifications, setNotifications] =
     useState([])
+  
 
   useEffect(() => {
     fetchNotifications()
 
     const channel = supabase
-      .channel('logs-realtime')
-      .on(
+        .channel('logs-realtime')
+        .on(
         'postgres_changes',
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'request_logs',
+            event: 'INSERT',
+            schema: 'public',
+            table: 'request_logs',
         },
-        (payload) => {
-          setNotifications((prev) => [
-            payload.new,
-            ...prev,
-          ])
+        () => {
+            fetchNotifications()
         }
-      )
-      .subscribe()
+        )
+        .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+        supabase.removeChannel(channel)
     }
-  }, [])
-
-  async function fetchNotifications() {
-    const { data, error } = await supabase
-      .from('request_logs')
-      .select('*')
-      .order('created_at', {
+    }, [profile])
+    async function fetchNotifications() {
+    let query = supabase
+        .from('request_logs')
+        .select(`
+        *,
+        requests (
+            user_id
+        )
+        `)
+        .order('created_at', {
         ascending: false,
-      })
-      .limit(5)
+        })
+        .limit(5)
+
+    // Students only see own notifications
+    if (profile?.role !== 'admin') {
+        query = query.eq(
+        'requests.user_id',
+        profile.id
+        )
+    }
+
+    const { data, error } = await query
+
+    console.log(data)
+    console.log(error)
 
     if (error) {
-      console.log(error)
-      return
+        console.log(error)
+        return
     }
 
     setNotifications(data)
-  }
+    }
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
