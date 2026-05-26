@@ -5,6 +5,7 @@ import RequestList from '../components/RequestList'
 import { useState } from 'react'
 import StatsCards from '../components/StatsCards'
 import { Menu, X } from 'lucide-react'
+import Notifications from '../components/Notifications'
 
 
 function Dashboard() {
@@ -123,6 +124,21 @@ function Dashboard() {
               </button>
 
               <button
+                onClick={() => {
+                  document
+                    .getElementById('notifications')
+                    ?.scrollIntoView({
+                      behavior: 'smooth',
+                    })
+
+                  setSidebarOpen(false)
+                }}
+                className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gray-100"
+              >
+                Notifications
+              </button>
+              
+              <button
                 onClick={handleLogout}
                 className="block w-full text-left px-4 py-3 rounded-xl text-red-500 hover:bg-red-50"
               >
@@ -155,6 +171,10 @@ function Dashboard() {
               <RequestList />
             </section>
           </div>
+          <br />
+          <section id="notifications">
+            <Notifications />
+          </section>
         </div>
       </div>
       </main>
