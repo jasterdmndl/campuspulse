@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 
 function RequestList() {
   const [requests, setRequests] = useState([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [selectedImage, setSelectedImage] =
@@ -16,6 +17,9 @@ function RequestList() {
 
   // FETCH REQUESTS
   async function fetchRequests() {
+
+    setLoading(true)
+
     const { data, error } = await supabase
       .from('requests')
       .select('*')
@@ -25,11 +29,14 @@ function RequestList() {
 
     if (error) {
       console.log(error)
+      setLoading(false)
       return
     }
 
     setRequests(data)
-  }
+
+    setLoading(false)
+}
 
   // FETCH LOGS
   async function fetchLogs(requestId) {
@@ -237,8 +244,66 @@ function RequestList() {
 
       {/* REQUESTS */}
       <div className="space-y-4">
+      
+          {loading && (
+      <>
+        {[1, 2, 3].map((item) => (
+          <div
+            key={item}
+            className="bg-white border border-gray-200 rounded-2xl p-5 animate-pulse"
+          >
 
-        {filteredRequests.map((request) => (
+            <div className="flex justify-between mb-4">
+
+              <div className="space-y-2">
+                <div className="h-5 w-40 bg-gray-200 rounded-lg"></div>
+                <div className="h-4 w-24 bg-gray-200 rounded-lg"></div>
+              </div>
+
+              <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <div className="h-4 bg-gray-200 rounded-lg"></div>
+              <div className="h-4 w-5/6 bg-gray-200 rounded-lg"></div>
+            </div>
+
+            <div className="h-40 bg-gray-200 rounded-2xl mb-4"></div>
+
+            <div className="flex justify-between items-center">
+
+              <div className="h-6 w-24 bg-gray-200 rounded-full"></div>
+
+              <div className="h-10 w-32 bg-gray-200 rounded-xl"></div>
+
+            </div>
+          </div>
+        ))}
+      </>
+    )}
+
+      {!loading && filteredRequests.length === 0 ? (
+        
+        <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-10 text-center">
+
+          <div className="text-5xl mb-4">
+            📭
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            No Requests Found
+          </h3>
+
+          <p className="text-gray-500">
+            Try adjusting your search or filters.
+          </p>
+
+        </div>
+
+      ) : (
+    
+    !loading &&
+    filteredRequests.map((request) => (
           <div
             key={request.id}
             onClick={async () => {
@@ -344,7 +409,8 @@ function RequestList() {
               )}
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
 
       {/* MODAL */}
