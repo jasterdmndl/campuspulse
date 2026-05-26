@@ -8,6 +8,8 @@ function RequestList({ refreshKey }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [selectedImage, setSelectedImage] = useState(null)
+  const [selectedRequest, setSelectedRequest] = useState(null)
+  const [logs, setLogs] = useState([])
 
   useEffect(() => {
   fetchRequests()
@@ -102,6 +104,23 @@ function RequestList({ refreshKey }) {
     return matchesSearch && matchesFilter
   })
 
+  async function fetchLogs(requestId) {
+    const { data, error } = await supabase
+      .from('request_logs')
+      .select('*')
+      .eq('request_id', requestId)
+      .order('created_at', {
+        ascending: true,
+      })
+
+    if (error) {
+      console.log(error)
+      return
+    }
+
+    setLogs(data)
+  }
+
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -145,7 +164,11 @@ function RequestList({ refreshKey }) {
         {filteredRequests.map((request) => (
           <div
             key={request.id}
-            className="border border-gray-200 rounded-2xl p-5 hover:shadow-md transition bg-white"
+            onClick={async () => {
+              setSelectedRequest(request)
+              await fetchLogs(request.id)
+            }}
+            className="border border-gray-200 rounded-2xl p-5 hover:shadow-md transition bg-white cursor-pointer"
           >
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
               
@@ -211,6 +234,102 @@ function RequestList({ refreshKey }) {
             </div>
           </div>
         ))}
+        {selectedRequest && (
+  <div
+    className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+    onClick={() => setSelectedRequest(null)}
+  >
+    
+    <div
+      className="bg-white w-full max-w-3xl rounded-3xl p-6 overflow-y-auto max-h-[90vh]"
+      onClick={(e) => e.stopPropagation()}
+    >
+
+      <div className="flex items-start justify-between mb-6">
+        
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {selectedRequest.title}
+          </h2>
+
+          <p className="text-gray-500 mt-1">
+            {selectedRequest.location}
+          </p>
+        </div>
+
+        <button
+          onClick={() => setSelectedRequest(null)}
+          className="text-gray-500 text-xl"
+        >
+          ✕
+        </button>
+      </div>
+
+      {selectedRequest.image_url && (
+        <img
+          src={selectedRequest.image_url}
+          alt="Request"
+          className="w-full h-72 object-cover rounded-2xl mb-6"
+        />
+      )}
+
+      <div className="space-y-4 mb-8">
+
+        <div>
+          <h3 className="font-semibold text-gray-700">
+            Description
+          </h3>
+
+          <p className="text-gray-600 mt-1">
+            {selectedRequest.description}
+          </p>
+        </div>
+
+        <div className="flex gap-3 flex-wrap">
+
+          <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+            {selectedRequest.category}
+          </span>
+
+          <span
+            className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedRequest.status)}`}
+          >
+            {selectedRequest.status}
+                </span>
+              </div>
+
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                Activity Timeline
+              </h3>
+
+              <div className="space-y-4">
+
+                {logs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="border-l-4 border-blue-500 pl-4"
+                  >
+                    <p className="text-gray-800 font-medium">
+                      {log.action}
+                    </p>
+
+                    <p className="text-sm text-gray-500">
+                      {new Date(
+                        log.created_at
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
       </div>
       {selectedImage && (
         <div
