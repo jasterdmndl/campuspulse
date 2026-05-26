@@ -137,7 +137,7 @@ function Dashboard() {
               >
                 Notifications
               </button>
-              
+
               <button
                 onClick={handleLogout}
                 className="block w-full text-left px-4 py-3 rounded-xl text-red-500 hover:bg-red-50"
@@ -156,6 +156,7 @@ function Dashboard() {
         <section id="dashboard">
           <StatsCards />
         </section>
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Request Form */}
         <div className="md:col-span-1">

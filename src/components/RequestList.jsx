@@ -121,6 +121,26 @@ function RequestList({ refreshKey }) {
     setLogs(data)
   }
 
+  async function deleteRequest(id) {
+    const confirmDelete = window.confirm(
+      'Delete this request?'
+    )
+
+    if (!confirmDelete) return
+
+    const { error } = await supabase
+      .from('requests')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.log(error)
+      return
+    }
+
+    fetchRequests()
+  }
+
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -206,6 +226,15 @@ function RequestList({ refreshKey }) {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               
               <div className="flex gap-2">
+                {(profile?.role === 'admin' ||
+                profile?.id === request.user_id) && (
+                <button
+                  onClick={() => deleteRequest(request.id)}
+                  className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition"
+                >
+                  DELETE
+                </button>
+              )}
                 <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
                   {request.category}
                 </span>
