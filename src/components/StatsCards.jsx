@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { useAuth } from '../context/AuthContext'
 
 function StatsCards() {
+  const { profile, user } = useAuth()
+
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -10,103 +13,206 @@ function StatsCards() {
   })
 
   useEffect(() => {
-    fetchStats()
+  fetchStats()
 
-    const channel = supabase
-      .channel('stats-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'requests',
-        },
-        () => {
-          fetchStats()
-        }
-      )
-      .subscribe()
+  const channel = supabase
+    .channel('stats-realtime')
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'requests',
+      },
+      () => {
+        fetchStats()
+      }
+    )
+
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}, [profile])
 
   async function fetchStats() {
-    const { data, error } = await supabase
-      .from('requests')
-      .select('status')
 
-    if (error) {
-      console.log(error)
-      return
+    // ADMIN VIEW
+    if (profile?.role === 'admin') {
+
+      const { count: total } = await supabase
+        .from('requests')
+        .select('*', {
+          count: 'exact',
+          head: true,
+        })
+
+      const { count: pending } =
+        await supabase
+          .from('requests')
+          .select('*', {
+            count: 'exact',
+            head: true,
+          })
+          .eq('status', 'pending')
+
+      const { count: inProgress } =
+        await supabase
+          .from('requests')
+          .select('*', {
+            count: 'exact',
+            head: true,
+          })
+          .eq('status', 'in_progress')
+
+      const { count: resolved } =
+        await supabase
+          .from('requests')
+          .select('*', {
+            count: 'exact',
+            head: true,
+          })
+          .eq('status', 'resolved')
+
+      setStats({
+        total: total || 0,
+        pending: pending || 0,
+        inProgress: inProgress || 0,
+        resolved: resolved || 0,
+      })
+
+    } else {
+
+      // STUDENT VIEW
+      const { count: total } = await supabase
+        .from('requests')
+        .select('*', {
+          count: 'exact',
+          head: true,
+        })
+        .eq('user_id', profile.id)
+
+      const { count: resolved } =
+        await supabase
+          .from('requests')
+          .select('*', {
+            count: 'exact',
+            head: true,
+          })
+          .eq('user_id', profile.id)
+          .eq('status', 'resolved')
+
+      setStats({
+        total: total || 0,
+        resolved: resolved || 0,
+      })
     }
-
-    const total = data.length
-
-    const pending = data.filter(
-      item => item.status === 'pending'
-    ).length
-
-    const inProgress = data.filter(
-      item => item.status === 'in_progress'
-    ).length
-
-    const resolved = data.filter(
-      item => item.status === 'resolved'
-    ).length
-
-    setStats({
-      total,
-      pending,
-      inProgress,
-      resolved,
-    })
   }
 
-  const cards = [
-    {
-      title: 'Total Requests',
-      value: stats.total,
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'Pending',
-      value: stats.pending,
-      color: 'bg-gray-500',
-    },
-    {
-      title: 'In Progress',
-      value: stats.inProgress,
-      color: 'bg-yellow-500',
-    },
-    {
-      title: 'Resolved',
-      value: stats.resolved,
-      color: 'bg-green-500',
-    },
-  ]
-
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {cards.map((card) => (
-        <div
-          key={card.title}
-          className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100"
-        >
-          <div
-            className={`w-3 h-3 rounded-full ${card.color} mb-4`}
-          />
+    <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-6 text-white shadow-lg">
 
-          <h3 className="text-sm text-gray-500">
-            {card.title}
-          </h3>
+      {/* TOP */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
 
-          <p className="text-3xl font-bold text-gray-800 mt-2">
-            {card.value}
+        <div>
+          <h2 className="text-2xl font-bold">
+            Welcome,
+            {' '}
+            {profile?.role === 'admin'
+              ? 'Administrator'
+              : 'Student'}
+          </h2>
+
+          <p className="text-blue-100 mt-1">
+            {user?.email}
           </p>
         </div>
-      ))}
+
+        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
+          {user?.email
+            ?.charAt(0)
+            .toUpperCase()}
+        </div>
+      </div>
+
+      {/* ADMIN STATS */}
+      {profile?.role === 'admin' ? (
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+          <div className="bg-white/10 rounded-2xl p-4">
+            <p className="text-sm text-blue-100">
+              Total Requests
+            </p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              {stats.total}
+            </h3>
+          </div>
+
+          <div className="bg-yellow-400/20 rounded-2xl p-4">
+            <p className="text-sm text-yellow-100">
+              Pending
+            </p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              {stats.pending}
+            </h3>
+          </div>
+
+          <div className="bg-blue-400/20 rounded-2xl p-4">
+            <p className="text-sm text-blue-100">
+              In Progress
+            </p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              {stats.inProgress}
+            </h3>
+          </div>
+
+          <div className="bg-green-400/20 rounded-2xl p-4">
+            <p className="text-sm text-green-100">
+              Resolved
+            </p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              {stats.resolved}
+            </h3>
+          </div>
+
+        </div>
+
+      ) : (
+
+        // STUDENT STATS
+        <div className="grid grid-cols-2 gap-4">
+
+          <div className="bg-white/10 rounded-2xl p-4">
+            <p className="text-sm text-blue-100">
+              My Requests
+            </p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              {stats.total}
+            </h3>
+          </div>
+
+          <div className="bg-green-400/20 rounded-2xl p-4">
+            <p className="text-sm text-green-100">
+              Resolved
+            </p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              {stats.resolved}
+            </h3>
+          </div>
+
+        </div>
+
+      )}
     </div>
   )
 }

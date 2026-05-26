@@ -5,10 +5,13 @@ import RequestList from '../components/RequestList'
 import StatsCards from '../components/StatsCards'
 import Notifications from '../components/Notifications'
 import toast from 'react-hot-toast'
+import { useState } from 'react'
 
 
 function Dashboard() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const [showCreate, setShowCreate] =
+    useState(false)
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -65,11 +68,32 @@ function Dashboard() {
 
           {/* LEFT SIDE */}
           <div className="space-y-6">
+            {/* STUDENT CREATE REQUEST */}
+            {profile?.role !== 'admin' && (
 
-            {/* CREATE REQUEST */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <CreateRequest />
-            </div>
+              <div className="space-y-4">
+
+                {/* TOGGLE BUTTON */}
+                <button
+                  onClick={() =>
+                    setShowCreate(!showCreate)
+                  }
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-medium transition"
+                >
+                  {showCreate
+                    ? 'Hide Request Form'
+                    : '+ Create Request'}
+                </button>
+
+                {/* FORM */}
+                {showCreate && (
+                  <div className="bg-white rounded-2xl shadow-sm p-6 animate-in fade-in duration-300">
+                    <CreateRequest />
+                  </div>
+                )}
+
+              </div>
+            )}
 
             {/* NOTIFICATIONS */}
             <section id="notifications">
