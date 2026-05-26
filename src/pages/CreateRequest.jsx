@@ -25,7 +25,7 @@ function CreateRequest() {
         .upload(fileName, image)
 
       if (uploadError) {
-        alert(uploadError.message)
+        toast.alert(uploadError.message)
         return
       }
 

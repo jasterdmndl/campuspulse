@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import toast from 'react-hot-toast'
+
 
 function RequestList() {
   const [requests, setRequests] = useState([])
@@ -105,7 +107,7 @@ function RequestList() {
       .eq('id', id)
 
     if (error) {
-      alert(error.message)
+      toast.alert(error.message)
       console.log(error)
       return
     }

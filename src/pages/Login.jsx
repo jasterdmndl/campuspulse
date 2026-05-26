@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import toast from 'react-hot-toast'
+
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -14,11 +16,11 @@ function Login() {
     })
 
     if (error) {
-      alert(error.message)
+      toast.error(error.message)
       return
     }
 
-    alert('Login successful!')
+    toast.success('Login successful!')
   }
 
   return (

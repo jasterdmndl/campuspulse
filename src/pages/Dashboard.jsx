@@ -4,6 +4,8 @@ import CreateRequest from './CreateRequest'
 import RequestList from '../components/RequestList'
 import StatsCards from '../components/StatsCards'
 import Notifications from '../components/Notifications'
+import toast from 'react-hot-toast'
+
 
 function Dashboard() {
   const { user } = useAuth()

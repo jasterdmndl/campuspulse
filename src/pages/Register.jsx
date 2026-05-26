@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import toast from 'react-hot-toast'
+
 
 function Register() {
   const [fullName, setFullName] = useState('')
@@ -15,7 +17,7 @@ function Register() {
     })
 
     if (error) {
-      alert(error.message)
+      toast.error(error.message)
       return
     }
 
@@ -28,7 +30,7 @@ function Register() {
       },
     ])
 
-    alert('Registration successful!')
+    toast.success('Registration successful!')
   }
 
   return (
