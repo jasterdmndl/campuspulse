@@ -32,25 +32,14 @@ function Notifications() {
     }, [profile])
     async function fetchNotifications() {
     let query = supabase
-        .from('request_logs')
-        .select(`
-        *,
-        requests (
-            user_id
-        )
-        `)
-        .order('created_at', {
+    .from('request_logs')
+    .select('*')
+    .eq('recipient_id', profile.id)
+    .order('created_at', {
         ascending: false,
-        })
-        .limit(5)
+    })
+    .limit(5)
 
-    // Students only see own notifications
-    if (profile?.role !== 'admin') {
-        query = query.eq(
-        'requests.user_id',
-        profile.id
-        )
-    }
 
     const { data, error } = await query
 

@@ -104,19 +104,29 @@ function RequestList() {
     }
 
     // Insert activity log
-    const { error: logError } = await supabase
-      .from('request_logs')
-      .insert([
-        {
-          request_id: id,
-          user_id: profile.id,
-          action: `changed status to ${newStatus}`,
-        },
-      ])
+    const request = requests.find(
+  (r) => r.id === id
+)
 
-    if (logError) {
-      console.log(logError)
-    }
+  const { error: logError } = await supabase
+    .from('request_logs')
+    .insert([
+      // Admin activity log
+      {
+        request_id: id,
+        user_id: profile.id,
+        recipient_id: profile.id,
+        action: `You changed status to ${newStatus}`,
+      },
+
+      // Student notification
+      {
+        request_id: id,
+        user_id: profile.id,
+        recipient_id: request.user_id,
+        action: `Your request "${request.title}" is now ${newStatus}`,
+      },
+    ])
   }
 
   // DELETE REQUEST
