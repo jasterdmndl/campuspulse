@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import toast from 'react-hot-toast'
+import { Eye, EyeOff } from 'lucide-react'
 
 function Auth() {
   const [isLogin, setIsLogin] =
@@ -15,6 +16,9 @@ function Auth() {
     useState('')
 
   const [loading, setLoading] =
+    useState(false)
+
+  const [showPassword, setShowPassword] =
     useState(false)
 
   async function handleSubmit(e) {
@@ -49,7 +53,18 @@ function Auth() {
         })
 
       if (error) {
-        toast.error(error.message)
+        if (
+          error.message.includes(
+            'User already registered'
+          )
+        ) {
+          toast.error(
+            'Email is already registered.'
+          )
+        } else {
+          toast.error(error.message)
+        }
+
         setLoading(false)
         return
       }
@@ -153,18 +168,32 @@ function Auth() {
             required
           />
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) =>
-              setPassword(
-                e.target.value
-              )
-            }
-            className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+              className="w-full border border-gray-300 rounded-2xl px-4 py-3 pr-14 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowPassword(!showPassword)
+              }
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition"
+            >
+              {showPassword ? (
+                <EyeOff size={20} />
+              ) : (
+                <Eye size={20} />
+              )}
+            </button>
+          </div>
 
           <button
             type="submit"
