@@ -6,6 +6,7 @@ import StatsCards from '../components/StatsCards'
 import Notifications from '../components/Notifications'
 import toast from 'react-hot-toast'
 import { useState } from 'react'
+import ChatBot from '../components/ChatBot'
 
 
 function Dashboard() {
@@ -114,6 +115,9 @@ function Dashboard() {
           </div>
         </div>
       </main>
+
+      <ChatBot />
+
     </div>
   )
 }
