@@ -30,10 +30,17 @@ function RequestList() {
     setSelectedRequest] =
     useState(null)
 
-  const [logs, setLogs] =
-    useState([])
 
   const { profile } = useAuth()
+
+  const [comments, setComments] =
+    useState([])
+
+  const [commentText, setCommentText] =
+    useState('')
+
+  const [reactions, setReactions] =
+    useState([])
 
   // =========================
   // FETCH REQUESTS
@@ -59,14 +66,34 @@ function RequestList() {
     setLoading(false)
   }
 
-  // =========================
-  // FETCH LOGS
-  // =========================
-  async function fetchLogs(requestId) {
+  // Reactions
+  async function fetchReactions() {
     const { data, error } =
       await supabase
-        .from('request_logs')
+        .from('reactions')
         .select('*')
+
+    if (error) {
+      console.log(error)
+      return
+    }
+
+    setReactions(data)
+  }
+
+  // Comments
+  async function fetchComments(
+    requestId
+  ) {
+    const { data, error } =
+      await supabase
+        .from('comments')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name
+          )
+        `)
         .eq('request_id', requestId)
         .order('created_at', {
           ascending: true,
@@ -77,7 +104,119 @@ function RequestList() {
       return
     }
 
-    setLogs(data)
+    setComments(data)
+  }
+
+
+  // Reaction Function
+
+  async function toggleReaction(requestId) {
+    const existingReaction =
+      reactions.find(
+        (reaction) =>
+          reaction.request_id === requestId &&
+          reaction.user_id === profile.id
+      )
+
+    // REMOVE LIKE
+    if (existingReaction) {
+
+      const { error } = await supabase
+        .from('reactions')
+        .delete()
+        .eq('id', existingReaction.id)
+
+      if (error) {
+        console.log(error)
+        toast.error(error.message)
+        return
+      }
+
+    } else {
+
+      // ADD LIKE
+      const { error } = await supabase
+        .from('reactions')
+        .insert([
+          {
+            request_id: requestId,
+            user_id: profile.id,
+          },
+        ])
+
+      if (error) {
+        console.log(error)
+        toast.error(error.message)
+        return
+      }
+    }
+
+    fetchReactions()
+  }
+
+  //Comment Function
+
+  async function addComment() {
+    if (!commentText.trim()) {
+      toast.error('Comment is empty')
+      return
+    }
+
+    const { error } = await supabase
+      .from('comments')
+      .insert([
+        {
+          request_id: selectedRequest.id,
+          user_id: profile.id,
+          content: commentText,
+        },
+      ])
+
+    if (error) {
+      console.log(error)
+      toast.error(error.message)
+      return
+    }
+
+    setCommentText('')
+
+    await fetchComments(
+      selectedRequest.id
+    )
+
+    toast.success('Comment added!')
+  }
+
+  // Delete Comment
+  async function deleteComment(
+    commentId
+  ) {
+    const confirmDelete =
+      window.confirm(
+        'Delete this comment?'
+      )
+
+    if (!confirmDelete) return
+
+    const { error } =
+      await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId)
+
+    if (error) {
+      console.log(error)
+      toast.error(error.message)
+      return
+    }
+
+    toast.success(
+      'Comment deleted'
+    )
+
+    fetchComments(
+      selectedRequest.id
+    )
   }
 
   // =========================
@@ -85,6 +224,7 @@ function RequestList() {
   // =========================
   useEffect(() => {
     fetchRequests()
+    fetchReactions()
 
     const channel = supabase
       .channel('requests-realtime')
@@ -361,10 +501,9 @@ function RequestList() {
                   setSelectedRequest(
                     request
                   )
+                  await fetchComments(request.id)
 
-                  await fetchLogs(
-                    request.id
-                  )
+                  
                 }}
                 className="border border-gray-200 rounded-2xl p-5 hover:shadow-md transition bg-white cursor-pointer"
               >
@@ -448,6 +587,23 @@ function RequestList() {
                         DELETE
                       </button>
                     )}
+                    <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleReaction(request.id)
+                    }}
+                    className="flex items-center gap-2 bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm hover:bg-pink-200 transition"
+                  >
+                    ❤️
+
+                    {
+                      reactions.filter(
+                        (reaction) =>
+                          reaction.request_id ===
+                          request.id
+                      ).length
+                    }
+                  </button>
                   </div>
 
                   {profile?.role ===
@@ -706,35 +862,93 @@ function RequestList() {
               </div>
             </div>
 
-            {/* TIMELINE */}
-            <div>
-              <h3 className="text-lg font-bold mb-4">
-                Activity Timeline
-              </h3>
+              <div className="mt-8">
+                <h3 className="text-lg font-bold mb-4">
+                  Comments
+                </h3>
 
-              <div className="space-y-4">
+                {/* INPUT */}
+                <div className="flex gap-2 mb-6">
 
-                {logs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="border-l-4 border-blue-500 pl-4"
+                  <input
+                    type="text"
+                    placeholder="Write a comment..."
+                    value={commentText}
+                    onChange={(e) =>
+                      setCommentText(
+                        e.target.value
+                      )
+                    }
+                    className="flex-1 border border-gray-300 rounded-xl px-4 py-3"
+                  />
+
+                  <button
+                    onClick={addComment}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-xl"
                   >
-                    <p className="font-medium">
-                      {log.action}
-                    </p>
+                    Send
+                  </button>
+                </div>
 
-                    <p className="text-sm text-gray-500">
-                      {new Date(
-                        log.created_at
-                      ).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
+                {/* COMMENTS */}
+                <div className="space-y-4">
+
+                  {comments.map((comment) => {
+                    const canDelete =
+                      profile?.id === comment.user_id ||
+                      profile?.id ===
+                        selectedRequest.user_id
+
+                    return (
+                      <div
+                        key={comment.id}
+                        className="bg-gray-100 rounded-2xl p-4"
+                      >
+
+                        <div className="flex items-start justify-between">
+
+                          <div>
+                            <p className="font-semibold text-sm">
+                              {
+                                comment.profiles
+                                  ?.full_name
+                              }
+                            </p>
+
+                            <p className="text-gray-700 mt-1">
+                              {comment.content}
+                            </p>
+
+                            <p className="text-xs text-gray-500 mt-2">
+                              {new Date(
+                                comment.created_at
+                              ).toLocaleString()}
+                            </p>
+                          </div>
+
+                          {canDelete && (
+                            <button
+                              onClick={() =>
+                                deleteComment(
+                                  comment.id
+                                )
+                              }
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              🗑️
+                            </button>
+                          )}
+
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                </div>
               </div>
             </div>
 
           </div>
-        </div>
       )}
 
       {/* IMAGE MODAL */}
