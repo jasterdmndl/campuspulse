@@ -42,6 +42,14 @@ function RequestList() {
   const [reactions, setReactions] =
     useState([])
 
+  const [showReportModal, setShowReportModal] =
+    useState(false)
+
+  const [reportReason, setReportReason] =
+    useState('')
+
+  const [reportRequestId, setReportRequestId] =
+    useState(null)
   // =========================
   // FETCH REQUESTS
   // =========================
@@ -359,6 +367,48 @@ function RequestList() {
     }
   }
 
+  // Report
+  async function submitReport() {
+    if (!reportReason.trim()) {
+      toast.error('Please enter a reason')
+      return
+    }
+
+    const { error } = await supabase
+      .from('reports')
+      .insert([
+        {
+          request_id: reportRequestId,
+          reporter_id: profile.id,
+          reason: reportReason,
+        },
+      ])
+
+    if (error) {
+      console.log(error)
+
+      if (
+        error.message.includes(
+          'unique_user_report'
+        )
+      ) {
+        toast.error(
+          'You already reported this request'
+        )
+        return
+      }
+
+      toast.error(error.message)
+      return
+    }
+
+    toast.success('Report submitted')
+
+    setShowReportModal(false)
+    setReportReason('')
+  }
+
+
   // =========================
   // FILTERS
   // =========================
@@ -567,6 +617,19 @@ function RequestList() {
                         request.category
                       }
                     </span>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+
+                        setReportRequestId(request.id)
+
+                        setShowReportModal(true)
+                      }}
+                      className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs hover:bg-orange-200 transition"
+                    >
+                      🚩 REPORT
+                    </button>
 
                     {(profile?.role ===
                       'admin' ||
@@ -964,6 +1027,58 @@ function RequestList() {
             alt="Preview"
             className="max-w-full max-h-full rounded-2xl shadow-2xl"
           />
+        </div>
+      )}
+      {showReportModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() =>
+            setShowReportModal(false)
+          }
+        >
+
+          <div
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+            className="bg-white rounded-3xl p-6 w-full max-w-md"
+          >
+
+            <h2 className="text-xl font-bold mb-4">
+              Report Request
+            </h2>
+
+            <textarea
+              placeholder="Why are you reporting this request?"
+              value={reportReason}
+              onChange={(e) =>
+                setReportReason(
+                  e.target.value
+                )
+              }
+              className="w-full border border-gray-300 rounded-2xl p-4 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+
+            <div className="flex justify-end gap-3 mt-4">
+
+              <button
+                onClick={() =>
+                  setShowReportModal(false)
+                }
+                className="px-4 py-2 rounded-xl bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={submitReport}
+                className="px-4 py-2 rounded-xl bg-orange-500 text-white hover:bg-orange-600"
+              >
+                Submit Report
+              </button>
+
+            </div>
+          </div>
         </div>
       )}
     </div>

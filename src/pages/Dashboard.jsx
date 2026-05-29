@@ -7,6 +7,7 @@ import Notifications from '../components/Notifications'
 import toast from 'react-hot-toast'
 import { useState } from 'react'
 import ChatBot from '../components/ChatBot'
+import Reports from '../components/Reports'
 
 
 function Dashboard() {
@@ -100,6 +101,13 @@ function Dashboard() {
             <section id="notifications">
               <Notifications />
             </section>
+
+            {/* REPORTS */}
+            {profile?.role === 'admin' && (
+              <div className="mt-6">
+                <Reports />
+              </div>
+            )}
 
           </div>
 
