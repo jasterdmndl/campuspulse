@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { useState } from 'react'
 import ChatBot from '../components/ChatBot'
 import Reports from '../components/Reports'
+import Announcements from '../components/Announcements'
 
 
 function Dashboard() {
@@ -63,6 +64,10 @@ function Dashboard() {
         {/* STATS */}
         <section id="dashboard" className="mb-6">
           <StatsCards />
+        </section>
+
+        <section className="mb-6">
+          <Announcements />
         </section>
 
         {/* GRID */}

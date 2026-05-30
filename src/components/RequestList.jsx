@@ -628,7 +628,7 @@ function RequestList() {
                       }}
                       className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs hover:bg-orange-200 transition"
                     >
-                      🚩 REPORT
+                      REPORT
                     </button>
 
                     {(profile?.role ===
